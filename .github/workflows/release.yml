@@ -1,0 +1,58 @@
+# Publishes to PyPI when a version tag (v*) is pushed.
+# One-time setup on pypi.org: add a "pending trusted publisher" for project "prismsca"
+# with owner generalwax2018, repository PrismSCA, workflow release.yml, environment pypi.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check tag matches package version
+        run: |
+          pkg=$(python -c "import re;print(re.search(r'__version__ = \"(.+)\"', open('prismsca/__init__.py').read()).group(1))")
+          test "v$pkg" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME != version v$pkg"; exit 1; }
+      - run: python -m pip install build
+      - run: python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # trusted publishing; no API token stored in the repo
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --notes "See CHANGELOG.md"
+        env:
+          GH_TOKEN: ${{ github.token }}

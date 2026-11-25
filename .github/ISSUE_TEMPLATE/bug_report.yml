@@ -1,0 +1,53 @@
+name: Bug report
+description: Something parsed wrong, crashed, or reported the wrong result
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying PrismSCA! **Security issue in PrismSCA itself?** Please use [private reporting](https://github.com/generalwax2018/PrismSCA/security/advisories/new) instead.
+  - type: input
+    id: version
+    attributes:
+      label: PrismSCA version
+      description: Output of `prismsca --version`
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Python version and OS
+      placeholder: Python 3.12, Windows 11
+    validations:
+      required: true
+  - type: dropdown
+    id: file
+    attributes:
+      label: Which file type is involved?
+      multiple: true
+      options:
+        - package-lock.json / npm-shrinkwrap.json
+        - package.json
+        - poetry.lock
+        - uv.lock
+        - Pipfile.lock
+        - requirements*.txt
+        - pyproject.toml
+        - Cargo.lock / Cargo.toml
+        - go.mod
+        - OSV lookup / network
+        - other
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: Include the command you ran and its full output.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest lockfile/manifest excerpt that reproduces it. Remove private package names and internal URLs.
+      render: text

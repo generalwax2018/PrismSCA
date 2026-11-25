@@ -1,16 +1,33 @@
 [project]
 name = "prismsca"
-version = "0.1.0"
-description = "Local-first SCA: third-party library inventory, OSV patches, behavioral risk signals, and PrismRedline handoff"
+dynamic = ["version"]
+description = "Local-first software composition analysis: multi-ecosystem dependency inventory, OSV vulnerability checks, and supply-chain risk signals"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     {name = "Michael Aaron Waxman"}
+]
+keywords = ["sca", "security", "supply-chain", "osv", "vulnerability", "dependencies", "sbom"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
 ]
 dependencies = [
     "packaging>=23.0",
     "requests>=2.31.0",
+    "urllib3>=1.26",
+    "tomli>=2.0; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]
@@ -18,9 +35,23 @@ dev = [
     "pytest>=7.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/generalwax2018/PrismSCA"
+Issues = "https://github.com/generalwax2018/PrismSCA/issues"
+Changelog = "https://github.com/generalwax2018/PrismSCA/blob/main/CHANGELOG.md"
+
 [project.scripts]
 prismsca = "prismsca.cli:main"
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "prismsca.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["prismsca*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

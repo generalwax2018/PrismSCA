@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m compileall -q prismsca
+      - run: python -m pytest -q
+      - name: CLI smoke test
+        run: |
+          prismsca --version
+          prismsca handoff . --skip-osv --out handoff.json
+
+  # "We scan ourselves": check the exact dependency versions CI installs against OSV.
+  self-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install ".[dev]"
+      - name: Freeze installed dependencies
+        run: |
+          mkdir -p "$RUNNER_TEMP/self-scan"
+          python -m pip freeze --exclude prismsca > "$RUNNER_TEMP/self-scan/requirements.txt"
+          cat "$RUNNER_TEMP/self-scan/requirements.txt"
+      - name: PrismSCA on its own dependencies
+        run: prismsca handoff "$RUNNER_TEMP/self-scan" --out self-scan.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: self-scan
+          path: self-scan.json
